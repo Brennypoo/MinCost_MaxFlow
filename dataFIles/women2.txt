@@ -1,0 +1,5 @@
+W:      d,b,c,a,e
+X:      d,b,a,c,e
+Y:      a,d,b,c,e
+Z:      b,a,d,c,e
+V:      d,a

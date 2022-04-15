@@ -1,0 +1,4 @@
+W:      d,b,c,a
+X:      d,b,a,c
+Y:      a,d,b,c
+Z:      b,a,d,c

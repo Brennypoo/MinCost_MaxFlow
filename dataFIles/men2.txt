@@ -1,0 +1,5 @@
+a:      W,X,Z,Y,V
+b:      W,Y,Z,X,V
+c:      X,W,Y,Z,V
+d:      W,Z,X,Y,V
+e:      W,V,X,Y,Z
