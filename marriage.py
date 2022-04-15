@@ -63,9 +63,10 @@ class Graph:
         for key in men.keys():
             self.menNodes.append(Node(key))
             for ikey in women.keys():
-                if ikey in men[key].keys():
+                if ikey in men[key].keys() and key in women[ikey].keys():
                     man = self.getNode(self.menNodes,key)
                     woman = self.getNode(self.womenNodes,ikey)
+                    print(men[key].keys())
                     man.connections.append({ikey: men[key][ikey] + women[ikey][key]})
                     woman.connections.append({key: men[key][ikey] + women[ikey][key]})
 
