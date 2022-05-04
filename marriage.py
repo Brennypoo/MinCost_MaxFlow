@@ -26,64 +26,150 @@ self-consistent between the two files.
 If a partner is unacceptable, it is not listed in the preferences.
 """
 import sys
+import decimal
+
 
 class Node:
-    def __init__(self,name):
+    def __init__(self, name):
         self.name = name
         self.connections = []
         self.isConnected = False
         self.to = None
+
+    def __str__(self):
+        return f'name: {self.name} ||  connections: {self.connections}'
+
     def getName(self):
         return self.name
+
     def getIsConnected(self):
         return self.isConnected
-    def connect(self,node):
+
+    def connect(self, node):
         self.to = node
         self.isConnected = True
+
     def disconnect(self):
         self.isConnected = False
-    def getCons(self):
-        return self.connections
-
 
 
 class Graph:
-    def __init__(self,men,women):
+    def __init__(self, men, women):
         self.sink = Node("sink")
         self.source = Node("source")
         self.menNodes = []
         self.womenNodes = []
         self.solution = {}
-        self.setup(men,women)
-        self.solve(self.menNodes,men,self.womenNodes,women)
+        self.setup(men, women)
+        self.solve(self.menNodes, men, self.womenNodes, women)
 
-    def setup(self,men,women):
-        for keys in women.keys():
-            self.womenNodes.append(Node(keys))
-        for key in men.keys():
-            self.menNodes.append(Node(key))
-            for ikey in women.keys():
-                if ikey in men[key].keys() and key in women[ikey].keys():
-                    man = self.getNode(self.menNodes,key)
-                    woman = self.getNode(self.womenNodes,ikey)
-                    print(men[key].keys())
-                    man.connections.append({ikey: men[key][ikey] + women[ikey][key]})
-                    woman.connections.append({key: men[key][ikey] + women[ikey][key]})
+    def setup(self, men, women):
+        # for keys in women.keys():
+        #     self.womenNodes.append(Node(keys))
+        # for key in men.keys():
+        #     self.menNodes.append(Node(key))
+        #     for ikey in women.keys():
+        #         if ikey in men[key].keys() and key in women[ikey].keys():
+        #             man = self.getNode(self.menNodes, key)
+        #             woman = self.getNode(self.womenNodes, ikey)
+        #             # print(men[key].keys())
+        #             man.connections.append({ikey: men[key][ikey] + women[ikey][key]})
+        #             woman.connections.append({key: men[key][ikey] + women[ikey][key]})
+        # for key in men.keys():
+        #     print(f"Fuck this shit man --------------------{key}------ {self.getNode(self.menNodes,key).connections}")
+        # for key in women.keys():
+        print(f"Fuck this shit woman")
 
-    def getNode(self,gender,name):
+    def getNode(self, gender, name):
         for node in gender:
-            if node.getName()==name:
+            if node.getName() == name:
                 return node
         return None
 
-    def solve(self,menNodes,men,womenNodes,women):
-        for node in menNodes:
-            print(f"{node.getName()} : {node.getCons()}")
-        print(men)
+    def solve(self, menNodes, men, womenNodes, women):
+        # print('B' in men['a'].keys())
+        master_array = ['source']
+        for key in men.keys():
+            master_array.append(key)
+        for key in women.keys():
+            master_array.append(key)
+        master_array.append("sink")
+        print(master_array)
+        initialArray = []
+        index_dict = {}
+        for i in range(0, len(master_array)):
+            secondaryArray = [i]
+            initialArray.append(secondaryArray)
+            index_dict[master_array[i]] = i
+            print(f"{master_array[i]} : {i}")
+        print(initialArray)
+        print(index_dict)
+        # men_k: The man, men_v: Man's preference dictionary
+        i = 0
+        for men_k, men_v in men.items():
+            # _women: A specific women in the man's preference dictionary
+            temp_list = []
+            for _women in men_v.keys():
+                # m_key:
+                for m_key in women[_women].keys():
+                    if (men_k == m_key):
+                        initialArray[index_dict[men_k]].append(index_dict[_women])
+                        weight = women[_women][m_key] + men[men_k][_women]
+                        print(initialArray[index_dict[men_k]])
+                        print(f"{m_key} ---{weight}---- {_women}")
+                        temp_list.append([m_key, _women, weight])
+            menNodes.append(temp_list)
+                # print(v in women[k1].keys())
+            i += 1
+            print()
+        C = [[0, 1, 1, 1, 0, 0, 0, 0],
+             [0, 0, 0, 0, 5, 4, 4, 0],
+             [0, 0, 0, 0, 4, 3, 2, 0],
+             [0, 0, 0, 0, 0, 4, 4, 0],
+             [0, 0, 0, 0, 0, 0, 0, 1],
+             [0, 0, 0, 0, 0, 0, 0, 1],
+             [0, 0, 0, 0, 0, 0, 0, 1],
+             [0, 0, 0, 0, 0, 0, 0, 0]]
+        s = 0
+        t = 7
+        max_flow_value = max_flow(C, s, t)
+        print("Edmonds-Karp algorithm")
+        print("max_flow_value is: ", max_flow_value)
+        for i in range(0, len(menNodes)):
+            print(menNodes[i])
+        for i in range(0, len(womenNodes)):
+            print(womenNodes[i])
 
-        for node in womenNodes:
-            print(f"{node.getName()} : {node.getCons()} - {node.isConnected}")
-        print(women)
+
+def max_flow(C, s, t):
+    n = len(C) # C is the capacity matrix
+    F = [[0] * n for i in range(n)]
+    path = bfs(C, F, s, t)
+    #  print path
+    while path != None:
+        flow = min(C[u][v] - F[u][v] for u,v in path)
+        for u,v in path:
+            F[u][v] += flow
+            F[v][u] -= flow
+        path = bfs(C, F, s, t)
+    return sum(F[s][i] for i in range(n))
+
+#find path by using BFS
+def bfs(C, F, s, t):
+    queue = [s]
+    paths = {s:[]}
+    if s == t:
+        return paths[s]
+    while queue:
+        u = queue.pop(0)
+        for v in range(len(C)):
+            if(C[u][v]-F[u][v]>0) and v not in paths:
+                paths[v] = paths[u]+[(u,v)]
+                print(paths)
+                if v == t:
+                    return paths[v]
+                queue.append(v)
+    return None
 
 
 class Person:
@@ -126,7 +212,7 @@ class Man(Person):
 
     def nextProposal(self):
         if self.proposalIndex >= len(self.priorities):
-            print ('returned None')
+            print('returned None')
             return None
         goal = self.priorities[self.proposalIndex]
         self.proposalIndex += 1
@@ -166,7 +252,7 @@ class Woman(Person):
         """
         if suitor in self.ranking:
             if self.partner == None or self.ranking[suitor] < self.ranking[self.partner]:
-                self.rank = self.ranking[suitor]+1
+                self.rank = self.ranking[suitor] + 1
                 return True
             else:
                 return False
@@ -209,7 +295,6 @@ def printPairings(men, women):
 
     print(f"the summed happiness (ranks) of the proposers is {manRankSum}")
     print(f"The summed happiness (ranks) of the proposees is {womenRankSum}")
-
 
 
 if __name__ == "__main__":
@@ -286,23 +371,21 @@ if __name__ == "__main__":
     for i in range(len(menlist)):
         men[f"{menlist[i][0]}"] = dict()
         for j in range(len(menlist[i][1])):
-            men[f"{menlist[i][0]}"][f"{menlist[i][1][j]}"] = j+1
+            men[f"{menlist[i][0]}"][f"{menlist[i][1][j]}"] = j + 1
 
     for i in range(len(womenlist)):
         women[f"{womenlist[i][0]}"] = dict()
         for j in range(len(womenlist[i][1])):
-            women[f"{womenlist[i][0]}"][f"{womenlist[i][1][j]}"] = j+1
+            women[f"{womenlist[i][0]}"][f"{womenlist[i][1][j]}"] = j + 1
 
-    print(f"men rankings: {men}")
-    print(f"women rankings: {women}")
-    print(men.keys())
-    print(women.keys())
-    print('B' in men['a'].keys())
-    minTotal = 0
-    x = Graph(men,women)
+    # print(f"men rankings: {men}")
+    # print(f"women rankings: {women}")
+    # print(men.keys())
+    # print(women.keys())
+    # print('B' in men['a'].keys())
+    # minTotal = 0
+    x = Graph(men, women)
     # print(men)
     # print(men.keys())
     # print(men.pop())
     # print(women)
-
-
